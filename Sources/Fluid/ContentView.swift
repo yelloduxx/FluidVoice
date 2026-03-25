@@ -1733,7 +1733,8 @@ struct ContentView: View {
         var finalText: String
 
         // Check if we should use AI processing
-        let shouldUseAI = DictationAIPostProcessingGate.isConfigured() || promptOverride != nil
+        let shouldUseAI = DictationAIPostProcessingGate.isConfigured() ||
+            (promptOverride != nil && DictationAIPostProcessingGate.isProviderConfigured())
 
         if shouldUseAI {
             DebugLogger.shared.debug("Routing transcription through AI post-processing", source: "ContentView")
@@ -2103,6 +2104,10 @@ struct ContentView: View {
     }
 
     private func setActiveRecordingMode(_ mode: ActiveRecordingMode) {
+        if mode != .promptMode {
+            self.promptModeOverrideText = nil
+            NotchContentState.shared.promptModeOverrideProfileName = nil
+        }
         self.activeRecordingMode = mode
         switch mode {
         case .none, .dictate, .promptMode:
@@ -2118,8 +2123,6 @@ struct ContentView: View {
     }
 
     private func clearActiveRecordingMode() {
-        self.promptModeOverrideText = nil
-        NotchContentState.shared.promptModeOverrideProfileName = nil
         self.setActiveRecordingMode(.none)
     }
 

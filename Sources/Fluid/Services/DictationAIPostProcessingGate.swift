@@ -25,6 +25,20 @@ enum DictationAIPostProcessingGate {
         return !apiKey.isEmpty
     }
 
+    /// Returns true if the selected AI provider is reachable/configured (API key or local endpoint),
+    /// regardless of the AI toggle or prompt selection. Used to gate prompt-mode hotkey AI processing.
+    static func isProviderConfigured() -> Bool {
+        let settings = SettingsStore.shared
+        let providerID = settings.selectedProviderID
+        if providerID == "apple-intelligence" {
+            return AppleIntelligenceService.isAvailable
+        }
+        let baseURL = self.baseURL(for: providerID, settings: settings)
+        if self.isLocalEndpoint(baseURL) { return true }
+        let apiKey = (settings.getAPIKey(for: providerID) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return !apiKey.isEmpty
+    }
+
     static func baseURL(for providerID: String, settings: SettingsStore) -> String {
         if let saved = settings.savedProviders.first(where: { $0.id == providerID }) {
             return saved.baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
